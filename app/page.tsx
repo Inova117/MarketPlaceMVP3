@@ -12,6 +12,7 @@ import { useGeolocation } from '@/hooks/use-geolocation'
 import { useProviders } from '@/hooks/use-providers'
 import { useFavorites } from '@/hooks/use-favorites'
 import { useAuth } from '@/contexts/auth-context'
+import { BackendFloatButton } from '@/components/backend-float-button'
 
 export default function HomePage() {
     const [query, setQuery] = useState('')
@@ -196,6 +197,9 @@ export default function HomePage() {
                 isOpen={showLoginModal}
                 onClose={() => setShowLoginModal(false)}
             />
+
+            {/* Backend Float Button */}
+            <BackendFloatButton />
         </div>
     )
 }
