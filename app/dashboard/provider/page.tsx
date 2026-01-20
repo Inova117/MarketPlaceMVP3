@@ -146,6 +146,34 @@ export default function ProviderDashboardPage() {
                             </Card>
                         </Link>
 
+                        <Link href="/dashboard/provider/services">
+                            <Card className="cursor-pointer transition-shadow hover:shadow-lg">
+                                <CardContent className="flex items-center gap-4 p-6">
+                                    <div className="rounded-lg bg-purple-100 p-3">
+                                        <LayoutDashboard className="h-6 w-6 text-purple-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-slate-900">Mis Servicios</h3>
+                                        <p className="text-sm text-slate-600">Define qué ofreces</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </Link>
+
+                        <Link href="/dashboard/provider/bookings">
+                            <Card className="cursor-pointer transition-shadow hover:shadow-lg">
+                                <CardContent className="flex items-center gap-4 p-6">
+                                    <div className="rounded-lg bg-orange-100 p-3">
+                                        <BarChart3 className="h-6 w-6 text-orange-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-slate-900">Reservas</h3>
+                                        <p className="text-sm text-slate-600">Gestiona citas</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </Link>
+
                         <Link href={`/providers/${user.providerId}`}>
                             <Card className="cursor-pointer transition-shadow hover:shadow-lg">
                                 <CardContent className="flex items-center gap-4 p-6">

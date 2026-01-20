@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { Star, MapPin, Plus } from 'lucide-react'
 import { reviewsStore } from '@/lib/mock-data/reviews-store'
+import { services as mockServices } from '@/lib/mock-data/services'
 import { Button } from '@/components/ui/button'
 import { ProviderGallery } from '@/components/features/provider-gallery'
 import { ProviderInfo } from '@/components/features/provider-info'
 import { ContactButtons } from '@/components/features/contact-buttons'
 import { ReviewList } from '@/components/features/review-list'
 import { ReviewForm, type ReviewFormData } from '@/components/features/review-form'
+import { ServiceList } from '@/components/features/service-list'
 import type { Provider, Review } from '@/lib/types'
 
 interface ProviderPageClientProps {
@@ -91,6 +93,19 @@ export function ProviderPageClient({
             <div className="mb-8">
                 <ProviderInfo provider={provider} />
             </div>
+
+            {/* Services */}
+            {mockServices.filter((s) => s.providerId === provider.id).length > 0 && (
+                <div className="mb-8">
+                    <h2 className="mb-4 font-display text-2xl font-bold text-slate-900">
+                        Servicios y Reservas
+                    </h2>
+                    <ServiceList
+                        services={mockServices.filter((s) => s.providerId === provider.id && s.isActive)}
+                        providerId={provider.id}
+                    />
+                </div>
+            )}
 
             {/* Reviews */}
             <div>

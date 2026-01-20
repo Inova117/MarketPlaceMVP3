@@ -44,3 +44,27 @@ export interface User {
     email: string
     avatar?: string
 }
+
+export interface Service {
+    id: string
+    providerId: string
+    name: string
+    description: string
+    price: number
+    duration: number // in minutes
+    isActive: boolean
+    createdAt: string
+}
+
+export interface Booking {
+    id: string
+    providerId: string
+    userId: string
+    serviceId: string
+    date: string // ISO date
+    time: string // "14:00"
+    status: 'pending' | 'confirmed' | 'rejected' | 'completed' | 'cancelled'
+    totalPrice: number
+    notes?: string
+    createdAt: string
+}
