@@ -1,4 +1,4 @@
-import type { Provider } from '@/lib/types'
+// Utility functions for geolocation and provider filtering
 
 /**
  * Calculate distance between two coordinates using Haversine formula
@@ -23,68 +23,45 @@ export function calculateDistance(
     const a =
         Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
         Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
-
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
-    return R * c // Distance in meters
+    return R * c
 }
 
 /**
- * Filter providers within a given radius
- * @param providers Array of providers
- * @param userLat User's latitude
- * @param userLng User's longitude
- * @param radiusMeters Radius in meters
- * @returns Filtered providers with distance property
+ * Check if a provider is currently open based on their hours
+ * @param hours Provider's operating hours object
+ * @returns true if open now, false otherwise
  */
-export function filterByRadius(
-    providers: Provider[],
-    userLat: number,
-    userLng: number,
-    radiusMeters: number
-): (Provider & { distance: number })[] {
-    return providers
-        .map((provider) => ({
-            ...provider,
-            distance: calculateDistance(
-                userLat,
-                userLng,
-                provider.latitude,
-                provider.longitude
-            ),
-        }))
-        .filter((provider) => provider.distance <= radiusMeters)
-}
+export function isOpenNow(hours?: {
+    [key: string]: { open: string; close: string } | null
+}): boolean {
+    if (!hours) return false
 
-/**
- * Sort providers by distance from user location
- * @param providers Array of providers
- * @param userLat User's latitude
- * @param userLng User's longitude
- * @returns Sorted providers with distance property
- */
-export function sortByDistance(
-    providers: Provider[],
-    userLat: number,
-    userLng: number
-): (Provider & { distance: number })[] {
-    return providers
-        .map((provider) => ({
-            ...provider,
-            distance: calculateDistance(
-                userLat,
-                userLng,
-                provider.latitude,
-                provider.longitude
-            ),
-        }))
-        .sort((a, b) => a.distance - b.distance)
+    const now = new Date()
+    const dayNames = [
+        'sunday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+    ]
+    const today = dayNames[now.getDay()] as string
+    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+
+    const todayHours = hours?.[today]
+    if (!todayHours) return false
+
+    // Simple string comparison works for HH:MM format
+    return currentTime >= todayHours.open && currentTime <= todayHours.close
 }
 
 /**
  * Format distance for display
  * @param meters Distance in meters
- * @returns Formatted string (e.g., "1.2 km" or "850 m")
+ * @returns Formatted string (e.g., "1.2 km" or "250 m")
  */
 export function formatDistance(meters: number): string {
     if (meters < 1000) {

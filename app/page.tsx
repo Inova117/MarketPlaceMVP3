@@ -19,6 +19,7 @@ export default function HomePage() {
     const [radius, setRadius] = useState(5000)
     const [ratingMin, setRatingMin] = useState<number | undefined>(undefined)
     const [priceRange, setPriceRange] = useState('')
+    const [openNow, setOpenNow] = useState(false)
     const [showLoginModal, setShowLoginModal] = useState(false)
     const [showUserMenu, setShowUserMenu] = useState(false)
 
@@ -32,6 +33,7 @@ export default function HomePage() {
         category,
         ratingMin,
         priceRange,
+        openNow,
         query,
     })
 
@@ -43,6 +45,7 @@ export default function HomePage() {
         setRadius(5000)
         setRatingMin(undefined)
         setPriceRange('')
+        setOpenNow(false)
         setQuery('')
     }
 
@@ -162,10 +165,12 @@ export default function HomePage() {
                             radius={radius}
                             ratingMin={ratingMin}
                             priceRange={priceRange}
+                            openNow={openNow}
                             onCategoryChange={setCategory}
                             onRadiusChange={setRadius}
                             onRatingMinChange={setRatingMin}
                             onPriceRangeChange={setPriceRange}
+                            onOpenNowChange={setOpenNow}
                             onClearFilters={handleClearFilters}
                         />
                     </aside>

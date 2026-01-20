@@ -9,10 +9,12 @@ interface FilterSidebarProps {
     radius: number
     ratingMin: number | undefined
     priceRange: string
+    openNow: boolean
     onCategoryChange: (category: string) => void
     onRadiusChange: (radius: number) => void
     onRatingMinChange: (rating: number | undefined) => void
     onPriceRangeChange: (price: string) => void
+    onOpenNowChange: (openNow: boolean) => void
     onClearFilters: () => void
 }
 
@@ -21,10 +23,12 @@ export function FilterSidebar({
     radius,
     ratingMin,
     priceRange,
+    openNow,
     onCategoryChange,
     onRadiusChange,
     onRatingMinChange,
     onPriceRangeChange,
+    onOpenNowChange,
     onClearFilters,
 }: FilterSidebarProps) {
     return (
@@ -146,6 +150,24 @@ export function FilterSidebar({
                             <span className="text-sm text-slate-700">Todos</span>
                         </label>
                     </div>
+                </div>
+
+                {/* Open Now Filter */}
+                <div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={openNow}
+                            onChange={(e) => onOpenNowChange(e.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600"
+                        />
+                        <span className="text-sm font-medium text-slate-700">
+                            Abierto ahora
+                        </span>
+                    </label>
+                    <p className="mt-1 text-xs text-slate-500">
+                        Solo mostrar proveedores actualmente abiertos
+                    </p>
                 </div>
             </div>
         </div>
