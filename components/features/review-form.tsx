@@ -1,8 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Star, X, Upload } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { StarInput } from '@/components/ui/rating'
+import { Modal, ModalHeader } from '@/components/ui/modal'
 import { createReviewSchema } from '@/lib/validations'
 import { reviewRateLimiter } from '@/lib/rate-limiter'
 
@@ -19,6 +23,8 @@ export interface ReviewFormData {
     comment: string
     photoUrl?: string | undefined
 }
+
+const RATING_LABELS = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente']
 
 export function ReviewForm({
     providerId,
@@ -37,17 +43,15 @@ export function ReviewForm({
         e.preventDefault()
         setErrors({})
 
-        // Check rate limit
         const rateLimit = reviewRateLimiter.check()
         if (!rateLimit.allowed) {
             const minutes = Math.ceil(rateLimit.resetIn / 60000)
             setErrors({
-                form: `Has enviado demasiadas reviews. Por favor espera ${minutes} minuto${minutes > 1 ? 's' : ''}.`,
+                form: `Has enviado demasiadas reseñas. Espera ${minutes} minuto${minutes > 1 ? 's' : ''}.`,
             })
             return
         }
 
-        // Validate with Zod
         const result = createReviewSchema.safeParse({
             providerId,
             rating,
@@ -58,146 +62,109 @@ export function ReviewForm({
         if (!result.success) {
             const fieldErrors: Record<string, string> = {}
             result.error.issues.forEach((err) => {
-                if (err.path[0]) {
-                    fieldErrors[err.path[0].toString()] = err.message
-                }
+                if (err.path[0]) fieldErrors[err.path[0].toString()] = err.message
             })
             setErrors(fieldErrors)
             return
         }
 
         setIsSubmitting(true)
-
-        // Increment rate limit counter
         reviewRateLimiter.increment()
-
         onSubmit(result.data)
     }
 
+    const displayRating = hoveredRating || rating
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
-                <div className="mb-6 flex items-center justify-between">
-                    <h2 className="font-display text-2xl font-bold text-slate-900">
-                        Escribir Review
-                    </h2>
-                    <button
-                        onClick={onCancel}
-                        className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-                    >
-                        <X className="h-6 w-6" />
-                    </button>
-                </div>
+        <Modal isOpen onClose={onCancel} size="max-w-xl">
+            <ModalHeader
+                title="Escribir una reseña"
+                description={`Comparte tu experiencia con ${providerName}`}
+                onClose={onCancel}
+            />
 
-                <p className="mb-6 text-slate-600">
-                    Comparte tu experiencia con <strong>{providerName}</strong>
-                </p>
-
+            <form onSubmit={handleSubmit} className="space-y-6 p-5 sm:p-6">
                 {errors.form && (
-                    <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4">
-                        <p className="text-sm text-red-800">{errors.form}</p>
+                    <div className="flex items-start gap-2.5 rounded-xl border border-danger/30 bg-danger-subtle p-3.5 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                        {errors.form}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Star Rating */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">
-                            Calificación *
-                        </label>
-                        <div className="flex gap-2">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                    key={star}
-                                    type="button"
-                                    onClick={() => setRating(star)}
-                                    onMouseEnter={() => setHoveredRating(star)}
-                                    onMouseLeave={() => setHoveredRating(0)}
-                                    className="transition-transform hover:scale-110"
-                                >
-                                    <Star
-                                        className={`h-10 w-10 ${star <= (hoveredRating || rating)
-                                            ? 'fill-yellow-400 text-yellow-400'
-                                            : 'text-slate-300'
-                                            }`}
-                                    />
-                                </button>
-                            ))}
-                        </div>
-                        {errors.rating && (
-                            <p className="mt-1 text-sm text-red-600">{errors.rating}</p>
-                        )}
-                    </div>
-
-                    {/* Comment */}
-                    <div>
-                        <label
-                            htmlFor="comment"
-                            className="mb-2 block text-sm font-medium text-slate-700"
-                        >
-                            Comentario *
-                        </label>
-                        <textarea
-                            id="comment"
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            rows={5}
-                            maxLength={500}
-                            placeholder="Cuéntanos sobre tu experiencia..."
-                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
+                {/* Rating */}
+                <div>
+                    <label className="mb-2.5 block text-sm font-semibold text-foreground">
+                        Tu calificación
+                    </label>
+                    <div className="flex items-center gap-3">
+                        <StarInput
+                            value={rating}
+                            hovered={hoveredRating}
+                            onChange={setRating}
+                            onHover={setHoveredRating}
                         />
-                        <div className="mt-1 flex items-center justify-between">
-                            <div>
-                                {errors.comment && (
-                                    <p className="text-sm text-red-600">{errors.comment}</p>
-                                )}
-                            </div>
-                            <p className="text-sm text-slate-500">
-                                {comment.length}/500 caracteres
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Photo URL (optional) */}
-                    <div>
-                        <label
-                            htmlFor="photoUrl"
-                            className="mb-2 block text-sm font-medium text-slate-700"
-                        >
-                            URL de foto (opcional)
-                        </label>
-                        <div className="flex gap-2">
-                            <input
-                                id="photoUrl"
-                                type="url"
-                                value={photoUrl}
-                                onChange={(e) => setPhotoUrl(e.target.value)}
-                                placeholder="https://ejemplo.com/foto.jpg"
-                                className="flex h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
-                            />
-                            <Button type="button" variant="outline" size="icon">
-                                <Upload className="h-5 w-5" />
-                            </Button>
-                        </div>
-                        {errors.photoUrl && (
-                            <p className="mt-1 text-sm text-red-600">{errors.photoUrl}</p>
+                        {displayRating > 0 && (
+                            <span className="text-sm font-medium text-muted-foreground">
+                                {RATING_LABELS[displayRating]}
+                            </span>
                         )}
-                        <p className="mt-1 text-xs text-slate-500">
-                            Pega la URL de una imagen de tu experiencia
-                        </p>
                     </div>
+                    {errors.rating && (
+                        <p className="mt-1.5 text-sm text-danger">{errors.rating}</p>
+                    )}
+                </div>
 
-                    {/* Actions */}
-                    <div className="flex justify-end gap-3">
-                        <Button type="button" variant="outline" onClick={onCancel}>
-                            Cancelar
-                        </Button>
-                        <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Enviando...' : 'Publicar Review'}
-                        </Button>
+                {/* Comment */}
+                <div>
+                    <label
+                        htmlFor="comment"
+                        className="mb-2 block text-sm font-semibold text-foreground"
+                    >
+                        Tu comentario
+                    </label>
+                    <Textarea
+                        id="comment"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        rows={5}
+                        maxLength={500}
+                        placeholder="Cuéntanos sobre tu experiencia: calidad, trato, puntualidad…"
+                    />
+                    <div className="mt-1.5 flex items-center justify-between">
+                        <p className="text-sm text-danger">{errors.comment}</p>
+                        <p className="text-xs text-muted-foreground">{comment.length}/500</p>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+
+                {/* Photo */}
+                <div>
+                    <label
+                        htmlFor="photoUrl"
+                        className="mb-2 block text-sm font-semibold text-foreground"
+                    >
+                        Foto <span className="font-normal text-muted-foreground">(opcional)</span>
+                    </label>
+                    <Input
+                        id="photoUrl"
+                        type="url"
+                        value={photoUrl}
+                        onChange={(e) => setPhotoUrl(e.target.value)}
+                        placeholder="https://ejemplo.com/foto.jpg"
+                    />
+                    {errors.photoUrl && (
+                        <p className="mt-1.5 text-sm text-danger">{errors.photoUrl}</p>
+                    )}
+                </div>
+
+                <div className="flex justify-end gap-3 border-t border-border pt-5">
+                    <Button type="button" variant="outline" onClick={onCancel}>
+                        Cancelar
+                    </Button>
+                    <Button type="submit" loading={isSubmitting}>
+                        Publicar reseña
+                    </Button>
+                </div>
+            </form>
+        </Modal>
     )
 }

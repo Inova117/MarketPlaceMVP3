@@ -1,7 +1,6 @@
 'use client'
 
-import { Search, MapPin } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Search, MapPin, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface SearchBarProps {
@@ -18,25 +17,38 @@ export function SearchBar({
     locationLoading,
 }: SearchBarProps) {
     return (
-        <div className="flex gap-2">
-            <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                <Input
+        <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface p-2 shadow-card sm:flex-row sm:items-center sm:rounded-full sm:pl-5">
+            <div className="relative flex flex-1 items-center">
+                <Search className="pointer-events-none h-5 w-5 shrink-0 text-muted-foreground" />
+                <input
                     type="text"
-                    placeholder="Buscar servicios (ej: plomero, electricista...)"
+                    placeholder="¿Qué necesitas? Ej: plomero, peluquería, taller…"
                     value={query}
                     onChange={(e) => onQueryChange(e.target.value)}
-                    className="pl-10"
+                    className="w-full border-0 bg-transparent px-3 py-2.5 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0"
                 />
+                {query && (
+                    <button
+                        onClick={() => onQueryChange('')}
+                        className="mr-1 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        aria-label="Limpiar búsqueda"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                )}
             </div>
             <Button
                 onClick={onLocationRequest}
                 disabled={locationLoading}
-                variant="outline"
-                className="shrink-0"
+                size="lg"
+                className="shrink-0 rounded-full sm:rounded-full"
             >
-                <MapPin className="mr-2 h-4 w-4" />
-                {locationLoading ? 'Obteniendo...' : 'Usar mi ubicación'}
+                {locationLoading ? (
+                    <Loader2 className="h-[18px] w-[18px] animate-spin" />
+                ) : (
+                    <MapPin className="h-[18px] w-[18px]" />
+                )}
+                {locationLoading ? 'Localizando…' : 'Usar mi ubicación'}
             </Button>
         </div>
     )

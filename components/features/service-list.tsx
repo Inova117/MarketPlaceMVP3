@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, Clock } from 'lucide-react'
+import { Calendar, Clock, PackageOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BookingModal } from './booking-modal'
+import { formatPrice } from '@/lib/utils'
 import type { Service } from '@/lib/types'
 
 interface ServiceListProps {
@@ -14,75 +14,55 @@ interface ServiceListProps {
 
 export function ServiceList({ services, providerId }: ServiceListProps) {
     const [selectedService, setSelectedService] = useState<Service | null>(null)
-    const [showBookingModal, setShowBookingModal] = useState(false)
-
-    const handleBookService = (service: Service) => {
-        setSelectedService(service)
-        setShowBookingModal(true)
-    }
-
-    const handleCloseModal = () => {
-        setShowBookingModal(false)
-        setSelectedService(null)
-    }
 
     if (services.length === 0) {
         return (
-            <Card>
-                <CardContent className="py-8 text-center">
-                    <p className="text-slate-600">
-                        Este proveedor aún no ha definido servicios reservables
-                    </p>
-                </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface py-12 text-center">
+                <PackageOpen className="h-9 w-9 text-muted-foreground" />
+                <p className="mt-3 text-sm text-muted-foreground">
+                    Este proveedor aún no ha publicado servicios reservables.
+                </p>
+            </div>
         )
     }
 
     return (
         <>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Servicios Disponibles</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {services.map((service) => (
-                            <div
-                                key={service.id}
-                                className="rounded-lg border border-slate-200 p-4 transition-shadow hover:shadow-md"
-                            >
-                                <h3 className="font-semibold text-slate-900">{service.name}</h3>
-                                <p className="mt-2 text-sm text-slate-600">{service.description}</p>
-
-                                <div className="mt-4 flex items-center justify-between">
-                                    <div>
-                                        <span className="text-2xl font-bold text-primary-600">
-                                            €{service.price}
-                                        </span>
-                                        <span className="ml-2 flex items-center gap-1 text-sm text-slate-500">
-                                            <Clock className="h-4 w-4" />
-                                            {service.duration} min
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    className="mt-4 w-full"
-                                    onClick={() => handleBookService(service)}
-                                >
-                                    <Calendar className="mr-2 h-4 w-4" />
-                                    Reservar
-                                </Button>
-                            </div>
-                        ))}
+            <div className="grid gap-4 sm:grid-cols-2">
+                {services.map((service) => (
+                    <div
+                        key={service.id}
+                        className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:border-primary-300 hover:shadow-lifted"
+                    >
+                        <div className="flex items-start justify-between gap-3">
+                            <h3 className="font-display font-bold text-foreground">
+                                {service.name}
+                            </h3>
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                {service.duration} min
+                            </span>
+                        </div>
+                        <p className="mt-2 flex-1 text-sm text-muted-foreground">
+                            {service.description}
+                        </p>
+                        <div className="mt-4 flex items-center justify-between">
+                            <span className="font-display text-2xl font-extrabold text-foreground">
+                                {formatPrice(service.price)}
+                            </span>
+                            <Button size="sm" onClick={() => setSelectedService(service)}>
+                                <Calendar className="h-4 w-4" />
+                                Reservar
+                            </Button>
+                        </div>
                     </div>
-                </CardContent>
-            </Card>
+                ))}
+            </div>
 
             {selectedService && (
                 <BookingModal
-                    isOpen={showBookingModal}
-                    onClose={handleCloseModal}
+                    isOpen={!!selectedService}
+                    onClose={() => setSelectedService(null)}
                     service={selectedService}
                     providerId={providerId}
                 />

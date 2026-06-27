@@ -3,17 +3,28 @@
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { ArrowLeft, Check, X, Calendar } from 'lucide-react'
+import { Check, X, CalendarClock } from 'lucide-react'
+import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Badge, type BadgeVariant } from '@/components/ui/badge'
+import { useToast } from '@/components/ui/toast'
 import { bookingsStore } from '@/lib/mock-data/bookings-store'
 import { services } from '@/lib/mock-data/services'
+import { formatPrice, cn } from '@/lib/utils'
 import type { Booking } from '@/lib/types'
+
+const STATUS: Record<Booking['status'], { label: string; variant: BadgeVariant }> = {
+    pending: { label: 'Pendiente', variant: 'warning' },
+    confirmed: { label: 'Confirmada', variant: 'success' },
+    rejected: { label: 'Rechazada', variant: 'danger' },
+    completed: { label: 'Completada', variant: 'primary' },
+    cancelled: { label: 'Cancelada', variant: 'default' },
+}
 
 export default function ProviderBookingsPage() {
     const { user, isAuthenticated } = useAuth()
     const router = useRouter()
+    const { toast } = useToast()
     const [bookings, setBookings] = useState<Booking[]>([])
     const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed'>('pending')
 
@@ -22,198 +33,140 @@ export default function ProviderBookingsPage() {
             router.push('/')
             return
         }
-
-        loadBookings()
-
-        // Subscribe to changes
-        const unsubscribe = bookingsStore.subscribe(() => {
-            loadBookings()
-        })
-
+        const load = () => {
+            if (user?.providerId) {
+                setBookings(bookingsStore.getByProviderId(user.providerId))
+            }
+        }
+        load()
+        const unsubscribe = bookingsStore.subscribe(load)
         return () => {
             unsubscribe()
         }
     }, [isAuthenticated, user, router])
 
-    const loadBookings = () => {
-        if (user?.providerId) {
-            const providerBookings = bookingsStore.getByProviderId(user.providerId)
-            setBookings(providerBookings)
-        }
+    if (!isAuthenticated || user?.role !== 'provider') return null
+
+    const handleAccept = (id: string) => {
+        bookingsStore.updateStatus(id, 'confirmed')
+        toast({ variant: 'success', title: 'Reserva confirmada' })
+    }
+    const handleReject = (id: string) => {
+        bookingsStore.updateStatus(id, 'rejected')
+        toast({ variant: 'info', title: 'Reserva rechazada' })
     }
 
-    if (!isAuthenticated || user?.role !== 'provider') {
-        return null
-    }
+    const filtered = bookings.filter((b) =>
+        filter === 'all' ? true : b.status === filter
+    )
+    const getServiceName = (id: string) =>
+        services.find((s) => s.id === id)?.name ?? 'Servicio'
 
-    const handleAccept = (bookingId: string) => {
-        bookingsStore.updateStatus(bookingId, 'confirmed')
-        alert('Reserva confirmada!')
-    }
-
-    const handleReject = (bookingId: string) => {
-        bookingsStore.updateStatus(bookingId, 'rejected')
-        alert('Reserva rechazada')
-    }
-
-    const filteredBookings = bookings.filter((b) => {
-        if (filter === 'all') return true
-        if (filter === 'pending') return b.status === 'pending'
-        if (filter === 'confirmed') return b.status === 'confirmed'
-        return true
-    })
-
-    const getServiceName = (serviceId: string) => {
-        const service = services.find((s) => s.id === serviceId)
-        return service?.name || 'Servicio desconocido'
-    }
-
-    const getStatusBadge = (status: Booking['status']) => {
-        const styles = {
-            pending: 'bg-yellow-100 text-yellow-700',
-            confirmed: 'bg-green-100 text-green-700',
-            rejected: 'bg-red-100 text-red-700',
-            completed: 'bg-blue-100 text-blue-700',
-            cancelled: 'bg-slate-100 text-slate-700',
-        }
-        const labels = {
-            pending: 'Pendiente',
-            confirmed: 'Confirmada',
-            rejected: 'Rechazada',
-            completed: 'Completada',
-            cancelled: 'Cancelada',
-        }
-        return (
-            <span className={`rounded-full px-2 py-1 text-xs font-medium ${styles[status]}`}>
-                {labels[status]}
-            </span>
-        )
+    const counts = {
+        pending: bookings.filter((b) => b.status === 'pending').length,
+        confirmed: bookings.filter((b) => b.status === 'confirmed').length,
+        all: bookings.length,
     }
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            {/* Header */}
-            <header className="border-b border-slate-200 bg-white shadow-sm">
-                <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <Link href="/dashboard/provider">
-                        <Button variant="ghost" size="sm" className="mb-2">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Volver al Dashboard
-                        </Button>
-                    </Link>
-                    <h1 className="font-display text-3xl font-bold text-slate-900">
-                        Mis Reservas
-                    </h1>
-                    <p className="mt-1 text-sm text-slate-600">
-                        Gestiona las solicitudes de reserva de tus clientes
-                    </p>
-                </div>
-            </header>
+        <DashboardShell
+            title="Mis reservas"
+            description="Gestiona las solicitudes de reserva de tus clientes."
+        >
+            {/* Filter tabs */}
+            <div className="mb-6 inline-flex rounded-xl border border-border bg-surface p-1">
+                {(['pending', 'confirmed', 'all'] as const).map((key) => (
+                    <button
+                        key={key}
+                        onClick={() => setFilter(key)}
+                        className={cn(
+                            'rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors',
+                            filter === key
+                                ? 'bg-primary-600 text-white'
+                                : 'text-muted-foreground hover:text-foreground'
+                        )}
+                    >
+                        {key === 'pending' ? 'Pendientes' : key === 'confirmed' ? 'Confirmadas' : 'Todas'}{' '}
+                        ({counts[key]})
+                    </button>
+                ))}
+            </div>
 
-            {/* Main Content */}
-            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                {/* Filters */}
-                <div className="mb-6 flex gap-2">
-                    <Button
-                        variant={filter === 'pending' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setFilter('pending')}
-                    >
-                        Pendientes ({bookings.filter((b) => b.status === 'pending').length})
-                    </Button>
-                    <Button
-                        variant={filter === 'confirmed' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setFilter('confirmed')}
-                    >
-                        Confirmadas ({bookings.filter((b) => b.status === 'confirmed').length})
-                    </Button>
-                    <Button
-                        variant={filter === 'all' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setFilter('all')}
-                    >
-                        Todas ({bookings.length})
-                    </Button>
-                </div>
-
-                {/* Bookings List */}
-                {filteredBookings.length > 0 ? (
-                    <div className="space-y-4">
-                        {filteredBookings.map((booking) => (
-                            <Card key={booking.id}>
-                                <CardContent className="p-6">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3">
-                                                <Calendar className="h-5 w-5 text-slate-400" />
-                                                <div>
-                                                    <h3 className="font-semibold text-slate-900">
-                                                        {getServiceName(booking.serviceId)}
-                                                    </h3>
-                                                    <p className="text-sm text-slate-600">
-                                                        {new Date(booking.date).toLocaleDateString('es-ES', {
-                                                            weekday: 'long',
-                                                            year: 'numeric',
-                                                            month: 'long',
-                                                            day: 'numeric',
-                                                        })} a las {booking.time}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="mt-4 flex items-center gap-4 text-sm">
-                                                <span className="font-medium">€{booking.totalPrice}</span>
-                                                {getStatusBadge(booking.status)}
-                                            </div>
-                                            {booking.notes && (
-                                                <p className="mt-2 text-sm text-slate-600">
-                                                    Nota: {booking.notes}
-                                                </p>
-                                            )}
+            {filtered.length > 0 ? (
+                <div className="space-y-4">
+                    {filtered.map((booking) => (
+                        <div
+                            key={booking.id}
+                            className="rounded-2xl border border-border bg-card p-5 shadow-card"
+                        >
+                            <div className="flex flex-wrap items-start justify-between gap-4">
+                                <div className="flex gap-3">
+                                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-950">
+                                        <CalendarClock className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-foreground">
+                                            {getServiceName(booking.serviceId)}
+                                        </h3>
+                                        <p className="text-sm capitalize text-muted-foreground">
+                                            {new Date(booking.date).toLocaleDateString('es-ES', {
+                                                weekday: 'long',
+                                                day: 'numeric',
+                                                month: 'long',
+                                            })}{' '}
+                                            · {booking.time}
+                                        </p>
+                                        <div className="mt-2 flex items-center gap-3">
+                                            <span className="font-semibold text-foreground">
+                                                {formatPrice(booking.totalPrice)}
+                                            </span>
+                                            <Badge variant={STATUS[booking.status].variant}>
+                                                {STATUS[booking.status].label}
+                                            </Badge>
                                         </div>
-
-                                        {booking.status === 'pending' && (
-                                            <div className="ml-4 flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => handleAccept(booking.id)}
-                                                    className="bg-green-600 hover:bg-green-700"
-                                                >
-                                                    <Check className="mr-1 h-4 w-4" />
-                                                    Aceptar
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => handleReject(booking.id)}
-                                                    className="text-red-600 hover:bg-red-50"
-                                                >
-                                                    <X className="mr-1 h-4 w-4" />
-                                                    Rechazar
-                                                </Button>
-                                            </div>
+                                        {booking.notes && (
+                                            <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+                                                “{booking.notes}”
+                                            </p>
                                         )}
                                     </div>
-                                </CardContent>
-                            </Card>
-                        ))}
+                                </div>
+
+                                {booking.status === 'pending' && (
+                                    <div className="flex gap-2">
+                                        <Button size="sm" onClick={() => handleAccept(booking.id)}>
+                                            <Check className="h-4 w-4" />
+                                            Aceptar
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleReject(booking.id)}
+                                        >
+                                            <X className="h-4 w-4" />
+                                            Rechazar
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface py-16 text-center">
+                    <div className="grid h-14 w-14 place-items-center rounded-2xl bg-muted">
+                        <CalendarClock className="h-7 w-7 text-muted-foreground" />
                     </div>
-                ) : (
-                    <Card>
-                        <CardContent className="flex flex-col items-center justify-center py-12">
-                            <Calendar className="h-12 w-12 text-slate-400" />
-                            <h3 className="mt-4 text-lg font-semibold text-slate-900">
-                                No hay reservas
-                            </h3>
-                            <p className="mt-2 text-sm text-slate-600">
-                                {filter === 'pending'
-                                    ? 'No tienes solicitudes pendientes'
-                                    : 'Aún no has recibido reservas'}
-                            </p>
-                        </CardContent>
-                    </Card>
-                )}
-            </main>
-        </div>
+                    <h3 className="mt-4 font-display text-lg font-bold text-foreground">
+                        No hay reservas
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        {filter === 'pending'
+                            ? 'No tienes solicitudes pendientes.'
+                            : 'Aún no has recibido reservas en esta vista.'}
+                    </p>
+                </div>
+            )}
+        </DashboardShell>
     )
 }

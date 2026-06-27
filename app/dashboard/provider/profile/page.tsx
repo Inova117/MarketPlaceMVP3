@@ -4,16 +4,41 @@ import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Save } from 'lucide-react'
+import { Save } from 'lucide-react'
+import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/components/ui/toast'
 import { providers } from '@/lib/mock-data/providers'
+import { categories } from '@/lib/mock-data/categories'
+
+function Field({
+    label,
+    htmlFor,
+    required,
+    children,
+}: {
+    label: string
+    htmlFor: string
+    required?: boolean
+    children: React.ReactNode
+}) {
+    return (
+        <div>
+            <label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold text-foreground">
+                {label} {required && <span className="text-danger">*</span>}
+            </label>
+            {children}
+        </div>
+    )
+}
 
 export default function ProviderProfilePage() {
     const { user, isAuthenticated } = useAuth()
     const router = useRouter()
-
+    const { toast } = useToast()
     const provider = providers.find((p) => p.id === user?.providerId)
 
     const [formData, setFormData] = useState({
@@ -25,214 +50,150 @@ export default function ProviderProfilePage() {
         email: provider?.email || '',
         address: provider?.address || '',
         priceRange: provider?.priceRange || '',
-        hours: 'Lun-Vie 09:00 - 18:00', // Simplified for demo text input
+        hours: 'Lun-Vie 09:00 - 18:00',
     })
 
     useEffect(() => {
-        if (!isAuthenticated || user?.role !== 'provider') {
-            router.push('/')
-        }
+        if (!isAuthenticated || user?.role !== 'provider') router.push('/')
     }, [isAuthenticated, user, router])
 
-    if (!isAuthenticated || user?.role !== 'provider') {
-        return null
-    }
+    if (!isAuthenticated || user?.role !== 'provider') return null
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        // In real app, save to backend
-        alert('Perfil actualizado exitosamente! (Demo - cambios no se guardan)')
+        toast({
+            variant: 'success',
+            title: 'Perfil actualizado',
+            description: 'En la demo los cambios no se guardan permanentemente.',
+        })
     }
 
-    const handleChange = (field: string, value: string) => {
+    const set = (field: string, value: string) =>
         setFormData((prev) => ({ ...prev, [field]: value }))
-    }
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            {/* Header */}
-            <header className="border-b border-slate-200 bg-white shadow-sm">
-                <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <Link href="/dashboard/provider">
-                        <Button variant="ghost" size="sm" className="mb-2">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Volver al Dashboard
+        <DashboardShell
+            title="Editar perfil"
+            description="Actualiza la información que ven tus clientes."
+        >
+            <form onSubmit={handleSubmit}>
+                <div className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-card">
+                    <Field label="Nombre del negocio" htmlFor="name" required>
+                        <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) => set('name', e.target.value)}
+                            placeholder="Ej: Plomería García"
+                            required
+                        />
+                    </Field>
+
+                    <Field label="Categoría" htmlFor="category" required>
+                        <Select
+                            id="category"
+                            value={formData.category}
+                            onChange={(e) => set('category', e.target.value)}
+                            required
+                        >
+                            <option value="">Selecciona una categoría</option>
+                            {categories.map((cat) => (
+                                <option key={cat} value={cat}>
+                                    {cat}
+                                </option>
+                            ))}
+                        </Select>
+                    </Field>
+
+                    <Field label="Descripción" htmlFor="description">
+                        <Textarea
+                            id="description"
+                            value={formData.description}
+                            onChange={(e) => set('description', e.target.value)}
+                            rows={4}
+                            placeholder="Describe tus servicios, experiencia y lo que te hace diferente…"
+                        />
+                    </Field>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <Field label="Teléfono" htmlFor="phone" required>
+                            <Input
+                                id="phone"
+                                type="tel"
+                                value={formData.phone}
+                                onChange={(e) => set('phone', e.target.value)}
+                                placeholder="+34 600 123 456"
+                                required
+                            />
+                        </Field>
+                        <Field label="WhatsApp" htmlFor="whatsapp">
+                            <Input
+                                id="whatsapp"
+                                type="tel"
+                                value={formData.whatsapp}
+                                onChange={(e) => set('whatsapp', e.target.value)}
+                                placeholder="+34 600 123 456"
+                            />
+                        </Field>
+                    </div>
+
+                    <Field label="Email" htmlFor="email" required>
+                        <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => set('email', e.target.value)}
+                            placeholder="contacto@ejemplo.com"
+                            required
+                        />
+                    </Field>
+
+                    <Field label="Dirección" htmlFor="address" required>
+                        <Input
+                            id="address"
+                            value={formData.address}
+                            onChange={(e) => set('address', e.target.value)}
+                            placeholder="Calle Principal 123, Madrid"
+                            required
+                        />
+                    </Field>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <Field label="Rango de precios" htmlFor="priceRange">
+                            <Select
+                                id="priceRange"
+                                value={formData.priceRange}
+                                onChange={(e) => set('priceRange', e.target.value)}
+                            >
+                                <option value="">Selecciona</option>
+                                <option value="$">$ · Económico</option>
+                                <option value="$$">$$ · Moderado</option>
+                                <option value="$$$">$$$ · Premium</option>
+                                <option value="$$$$">$$$$ · Exclusivo</option>
+                            </Select>
+                        </Field>
+                        <Field label="Horario" htmlFor="hours">
+                            <Input
+                                id="hours"
+                                value={formData.hours}
+                                onChange={(e) => set('hours', e.target.value)}
+                                placeholder="Lun-Vie 9:00-18:00"
+                            />
+                        </Field>
+                    </div>
+
+                    <div className="flex justify-end gap-3 border-t border-border pt-5">
+                        <Link href="/dashboard/provider">
+                            <Button type="button" variant="outline">
+                                Cancelar
+                            </Button>
+                        </Link>
+                        <Button type="submit">
+                            <Save className="h-4 w-4" />
+                            Guardar cambios
                         </Button>
-                    </Link>
-                    <h1 className="font-display text-3xl font-bold text-slate-900">
-                        Editar Perfil
-                    </h1>
-                    <p className="mt-1 text-sm text-slate-600">
-                        Actualiza la información de tu negocio
-                    </p>
+                    </div>
                 </div>
-            </header>
-
-            {/* Main Content */}
-            <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-                <form onSubmit={handleSubmit}>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Información Básica</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            {/* Name */}
-                            <div>
-                                <label htmlFor="name" className="mb-2 block text-sm font-medium text-slate-700">
-                                    Nombre del Negocio *
-                                </label>
-                                <Input
-                                    id="name"
-                                    value={formData.name}
-                                    onChange={(e) => handleChange('name', e.target.value)}
-                                    placeholder="Ej: Plomería García"
-                                    required
-                                />
-                            </div>
-
-                            {/* Category */}
-                            <div>
-                                <label htmlFor="category" className="mb-2 block text-sm font-medium text-slate-700">
-                                    Categoría *
-                                </label>
-                                <select
-                                    id="category"
-                                    value={formData.category}
-                                    onChange={(e) => handleChange('category', e.target.value)}
-                                    className="flex h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
-                                    required
-                                >
-                                    <option value="">Selecciona una categoría</option>
-                                    <option value="Plomería">Plomería</option>
-                                    <option value="Electricidad">Electricidad</option>
-                                    <option value="Limpieza">Limpieza</option>
-                                    <option value="Jardinería">Jardinería</option>
-                                    <option value="Pintura">Pintura</option>
-                                    <option value="Carpintería">Carpintería</option>
-                                </select>
-                            </div>
-
-                            {/* Description */}
-                            <div>
-                                <label htmlFor="description" className="mb-2 block text-sm font-medium text-slate-700">
-                                    Descripción
-                                </label>
-                                <textarea
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => handleChange('description', e.target.value)}
-                                    rows={4}
-                                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
-                                    placeholder="Describe tus servicios..."
-                                />
-                            </div>
-
-                            {/* Contact Info */}
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label htmlFor="phone" className="mb-2 block text-sm font-medium text-slate-700">
-                                        Teléfono *
-                                    </label>
-                                    <Input
-                                        id="phone"
-                                        type="tel"
-                                        value={formData.phone}
-                                        onChange={(e) => handleChange('phone', e.target.value)}
-                                        placeholder="+34 600 123 456"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label htmlFor="whatsapp" className="mb-2 block text-sm font-medium text-slate-700">
-                                        WhatsApp
-                                    </label>
-                                    <Input
-                                        id="whatsapp"
-                                        type="tel"
-                                        value={formData.whatsapp}
-                                        onChange={(e) => handleChange('whatsapp', e.target.value)}
-                                        placeholder="+34 600 123 456"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
-                                    Email *
-                                </label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={(e) => handleChange('email', e.target.value)}
-                                    placeholder="contacto@ejemplo.com"
-                                    required
-                                />
-                            </div>
-
-                            {/* Address */}
-                            <div>
-                                <label htmlFor="address" className="mb-2 block text-sm font-medium text-slate-700">
-                                    Dirección *
-                                </label>
-                                <Input
-                                    id="address"
-                                    value={formData.address}
-                                    onChange={(e) => handleChange('address', e.target.value)}
-                                    placeholder="Calle Principal 123, Madrid"
-                                    required
-                                />
-                            </div>
-
-                            {/* Business Info */}
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label htmlFor="priceRange" className="mb-2 block text-sm font-medium text-slate-700">
-                                        Rango de Precios
-                                    </label>
-                                    <select
-                                        id="priceRange"
-                                        value={formData.priceRange}
-                                        onChange={(e) => handleChange('priceRange', e.target.value)}
-                                        className="flex h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
-                                    >
-                                        <option value="">Selecciona</option>
-                                        <option value="$">$ - Económico</option>
-                                        <option value="$$">$$ - Moderado</option>
-                                        <option value="$$$">$$$ - Premium</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="hours" className="mb-2 block text-sm font-medium text-slate-700">
-                                        Horario
-                                    </label>
-                                    <Input
-                                        id="hours"
-                                        value={formData.hours}
-                                        onChange={(e) => handleChange('hours', e.target.value)}
-                                        placeholder="Lun-Vie 9:00-18:00"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex justify-end gap-3 pt-4">
-                                <Link href="/dashboard/provider">
-                                    <Button type="button" variant="outline">
-                                        Cancelar
-                                    </Button>
-                                </Link>
-                                <Button type="submit">
-                                    <Save className="mr-2 h-4 w-4" />
-                                    Guardar Cambios
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </form>
-            </main>
-        </div>
+            </form>
+        </DashboardShell>
     )
 }

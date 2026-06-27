@@ -4,227 +4,155 @@ import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { LayoutDashboard, User, Image, BarChart3, ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+    Star,
+    MessageSquare,
+    Images,
+    Wrench,
+    CalendarCheck,
+    UserCog,
+    TrendingUp,
+    ChevronRight,
+} from 'lucide-react'
+import { DashboardShell } from '@/components/layout/dashboard-shell'
+import { Rating } from '@/components/ui/rating'
+import { Avatar } from '@/components/ui/avatar'
 import { providers } from '@/lib/mock-data/providers'
 import { reviewsStore } from '@/lib/mock-data/reviews-store'
+import { timeAgo } from '@/lib/utils'
+
+const STAT_CONFIG = [
+    { key: 'rating', label: 'Valoración media', icon: Star, tile: 'bg-accent-100 text-accent-600 dark:bg-accent-900/40' },
+    { key: 'reviews', label: 'Reseñas totales', icon: MessageSquare, tile: 'bg-primary-100 text-primary-600 dark:bg-primary-950' },
+    { key: 'photos', label: 'Fotos en galería', icon: Images, tile: 'bg-violet-100 text-violet-600 dark:bg-violet-950/50' },
+    { key: 'status', label: 'Estado del perfil', icon: TrendingUp, tile: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50' },
+] as const
+
+const QUICK_ACTIONS = [
+    { href: '/dashboard/provider/profile', label: 'Editar perfil', desc: 'Actualiza tu información', icon: UserCog },
+    { href: '/dashboard/provider/photos', label: 'Gestionar fotos', desc: 'Añade o elimina imágenes', icon: Images },
+    { href: '/dashboard/provider/services', label: 'Mis servicios', desc: 'Define qué ofreces', icon: Wrench },
+    { href: '/dashboard/provider/bookings', label: 'Reservas', desc: 'Gestiona tus citas', icon: CalendarCheck },
+]
 
 export default function ProviderDashboardPage() {
     const { user, isAuthenticated } = useAuth()
     const router = useRouter()
 
     useEffect(() => {
-        if (!isAuthenticated || user?.role !== 'provider') {
-            router.push('/')
-        }
+        if (!isAuthenticated || user?.role !== 'provider') router.push('/')
     }, [isAuthenticated, user, router])
 
-    if (!isAuthenticated || user?.role !== 'provider') {
-        return null
-    }
+    if (!isAuthenticated || user?.role !== 'provider') return null
 
-    // Get provider data
     const provider = providers.find((p) => p.id === user.providerId)
     const reviews = provider ? reviewsStore.getByProviderId(provider.id) : []
 
-    // Calculate stats
-    const totalReviews = reviews.length
-    const avgRating = provider?.avgRating || 0
-    const totalPhotos = provider?.photos.length || 0
+    const stats: Record<string, { value: string; sub: string }> = {
+        rating: { value: (provider?.avgRating ?? 0).toFixed(1), sub: `${reviews.length} reseñas` },
+        reviews: { value: String(reviews.length), sub: 'Opiniones de clientes' },
+        photos: { value: String(provider?.photos.length ?? 0), sub: 'Visibles para clientes' },
+        status: { value: 'Activo', sub: 'Perfil público' },
+    }
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            {/* Header */}
-            <header className="border-b border-slate-200 bg-white shadow-sm">
-                <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <Link href="/">
-                                <Button variant="ghost" size="sm" className="mb-2">
-                                    <ArrowLeft className="mr-2 h-4 w-4" />
-                                    Volver al Marketplace
-                                </Button>
-                            </Link>
-                            <h1 className="font-display text-3xl font-bold text-slate-900">
-                                Dashboard del Proveedor
-                            </h1>
-                            <p className="mt-1 text-sm text-slate-600">
-                                Gestiona tu perfil y servicios
-                            </p>
+        <DashboardShell
+            title={`Hola, ${user.name.split(' ')[0]} 👋`}
+            description={
+                provider
+                    ? `Tu perfil "${provider.name}" está activo y visible.`
+                    : 'Configura tu perfil para empezar a recibir clientes.'
+            }
+        >
+            {/* Hero banner */}
+            <div className="mb-6 overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-glow sm:p-8">
+                <p className="text-sm font-medium text-white/80">Resumen de actividad</p>
+                <h2 className="mt-1 font-display text-2xl font-bold">
+                    {reviews.length > 0
+                        ? `${reviews.length} clientes ya han opinado sobre ti`
+                        : 'Empieza a destacar entre la competencia'}
+                </h2>
+                <p className="mt-1.5 max-w-lg text-white/80">
+                    Mantén tu perfil actualizado, sube fotos de calidad y responde a las
+                    reservas rápido para aparecer más arriba en los resultados.
+                </p>
+            </div>
+
+            {/* Stats */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {STAT_CONFIG.map(({ key, label, icon: Icon, tile }) => (
+                    <div
+                        key={key}
+                        className="rounded-2xl border border-border bg-card p-5 shadow-card"
+                    >
+                        <div className={`grid h-10 w-10 place-items-center rounded-xl ${tile}`}>
+                            <Icon className="h-5 w-5" />
                         </div>
+                        <p className="mt-3 font-display text-2xl font-extrabold text-foreground">
+                            {stats[key]?.value}
+                        </p>
+                        <p className="text-sm font-medium text-foreground">{label}</p>
+                        <p className="text-xs text-muted-foreground">{stats[key]?.sub}</p>
                     </div>
-                </div>
-            </header>
+                ))}
+            </div>
 
-            {/* Main Content */}
-            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                {/* Welcome */}
-                <div className="mb-8 rounded-lg bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white">
-                    <h2 className="text-2xl font-bold">¡Bienvenido, {user.name}!</h2>
-                    <p className="mt-2 text-primary-100">
-                        {provider ? `Tu perfil "${provider.name}" está activo` : 'Configura tu perfil para empezar'}
-                    </p>
-                </div>
+            {/* Quick actions */}
+            <h3 className="mb-4 mt-8 font-display text-lg font-bold text-foreground">
+                Acciones rápidas
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+                {QUICK_ACTIONS.map(({ href, label, desc, icon: Icon }) => (
+                    <Link
+                        key={href}
+                        href={href}
+                        className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-lifted"
+                    >
+                        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-600 group-hover:text-white dark:bg-primary-950">
+                            <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-foreground">{label}</p>
+                            <p className="text-sm text-muted-foreground">{desc}</p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                ))}
+            </div>
 
-                {/* Stats Grid */}
-                <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Rating Promedio</CardTitle>
-                            <BarChart3 className="h-4 w-4 text-slate-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{avgRating.toFixed(1)} ⭐</div>
-                            <p className="text-xs text-slate-600">De {totalReviews} reviews</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Reviews</CardTitle>
-                            <User className="h-4 w-4 text-slate-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{totalReviews}</div>
-                            <p className="text-xs text-slate-600">Opiniones de clientes</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Fotos</CardTitle>
-                            <Image className="h-4 w-4 text-slate-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{totalPhotos}</div>
-                            <p className="text-xs text-slate-600">En tu galería</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Visibilidad</CardTitle>
-                            <LayoutDashboard className="h-4 w-4 text-slate-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-600">Activo</div>
-                            <p className="text-xs text-slate-600">Perfil público</p>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="mb-8">
-                    <h2 className="mb-4 text-xl font-bold text-slate-900">Acciones Rápidas</h2>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <Link href="/dashboard/provider/profile">
-                            <Card className="cursor-pointer transition-shadow hover:shadow-lg">
-                                <CardContent className="flex items-center gap-4 p-6">
-                                    <div className="rounded-lg bg-primary-100 p-3">
-                                        <User className="h-6 w-6 text-primary-600" />
+            {/* Recent reviews */}
+            <h3 className="mb-4 mt-8 font-display text-lg font-bold text-foreground">
+                Reseñas recientes
+            </h3>
+            <div className="rounded-2xl border border-border bg-card shadow-card">
+                {reviews.length > 0 ? (
+                    <ul className="divide-y divide-border">
+                        {reviews.slice(0, 5).map((review) => (
+                            <li key={review.id} className="flex items-start gap-3 p-5">
+                                <Avatar name={review.userName} size="sm" />
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <p className="font-semibold text-foreground">
+                                            {review.userName}
+                                        </p>
+                                        <span className="text-xs text-muted-foreground">
+                                            {timeAgo(review.createdAt)}
+                                        </span>
                                     </div>
-                                    <div>
-                                        <h3 className="font-semibold text-slate-900">Editar Perfil</h3>
-                                        <p className="text-sm text-slate-600">Actualiza tu información</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
-
-                        <Link href="/dashboard/provider/photos">
-                            <Card className="cursor-pointer transition-shadow hover:shadow-lg">
-                                <CardContent className="flex items-center gap-4 p-6">
-                                    <div className="rounded-lg bg-blue-100 p-3">
-                                        <Image className="h-6 w-6 text-blue-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-slate-900">Gestionar Fotos</h3>
-                                        <p className="text-sm text-slate-600">Añade o elimina imágenes</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
-
-                        <Link href="/dashboard/provider/services">
-                            <Card className="cursor-pointer transition-shadow hover:shadow-lg">
-                                <CardContent className="flex items-center gap-4 p-6">
-                                    <div className="rounded-lg bg-purple-100 p-3">
-                                        <LayoutDashboard className="h-6 w-6 text-purple-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-slate-900">Mis Servicios</h3>
-                                        <p className="text-sm text-slate-600">Define qué ofreces</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
-
-                        <Link href="/dashboard/provider/bookings">
-                            <Card className="cursor-pointer transition-shadow hover:shadow-lg">
-                                <CardContent className="flex items-center gap-4 p-6">
-                                    <div className="rounded-lg bg-orange-100 p-3">
-                                        <BarChart3 className="h-6 w-6 text-orange-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-slate-900">Reservas</h3>
-                                        <p className="text-sm text-slate-600">Gestiona citas</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
-
-                        <Link href={`/providers/${user.providerId}`}>
-                            <Card className="cursor-pointer transition-shadow hover:shadow-lg">
-                                <CardContent className="flex items-center gap-4 p-6">
-                                    <div className="rounded-lg bg-green-100 p-3">
-                                        <LayoutDashboard className="h-6 w-6 text-green-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-slate-900">Ver Perfil Público</h3>
-                                        <p className="text-sm text-slate-600">Como lo ven los clientes</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
-                    </div>
-                </div>
-
-                {/* Recent Reviews */}
-                <div>
-                    <h2 className="mb-4 text-xl font-bold text-slate-900">Reviews Recientes</h2>
-                    <Card>
-                        <CardContent className="p-6">
-                            {reviews.length > 0 ? (
-                                <div className="space-y-4">
-                                    {reviews.slice(0, 5).map((review) => (
-                                        <div key={review.id} className="border-b border-slate-200 pb-4 last:border-0">
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <p className="font-medium text-slate-900">{review.userName}</p>
-                                                    <div className="mt-1 flex items-center gap-1">
-                                                        {[...Array(5)].map((_, i) => (
-                                                            <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-slate-300'}>
-                                                                ⭐
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                    <p className="mt-2 text-sm text-slate-600">{review.comment}</p>
-                                                </div>
-                                                <span className="text-xs text-slate-500">
-                                                    {new Date(review.createdAt).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
+                                    <Rating value={review.rating} size="sm" className="mt-0.5" />
+                                    <p className="mt-1.5 text-sm text-muted-foreground">
+                                        {review.comment}
+                                    </p>
                                 </div>
-                            ) : (
-                                <p className="text-center text-slate-600">No hay reviews aún</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-            </main>
-        </div>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <div className="p-10 text-center text-muted-foreground">
+                        Aún no has recibido reseñas.
+                    </div>
+                )}
+            </div>
+        </DashboardShell>
     )
 }

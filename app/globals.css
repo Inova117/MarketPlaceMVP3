@@ -4,21 +4,31 @@
 
 @layer base {
   :root {
-    /* Light mode */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --border: 240 5.9% 90%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    /* Light — warm, premium neutrals with an indigo undertone */
+    --background: 240 33% 99%;
+    --surface: 0 0% 100%;
+    --foreground: 240 24% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 24% 12%;
+    --muted: 240 20% 96%;
+    --muted-foreground: 240 8% 45%;
+    --border: 240 16% 90%;
+    --input: 240 16% 88%;
+    --ring: 243 75% 59%;
   }
 
   .dark {
-    /* Dark mode */
-    --background: 240 10% 3.9%;
+    /* Dark — deep indigo charcoal */
+    --background: 240 24% 7%;
+    --surface: 240 20% 11%;
     --foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --card: 240 20% 11%;
+    --card-foreground: 0 0% 98%;
+    --muted: 240 16% 16%;
+    --muted-foreground: 240 10% 64%;
+    --border: 240 14% 20%;
+    --input: 240 14% 22%;
+    --ring: 243 75% 66%;
   }
 }
 
@@ -26,7 +36,97 @@
   * {
     @apply border-border;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+
+  /* Refined focus ring across the app */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  ::selection {
+    @apply bg-primary-500/20 text-foreground;
+  }
+}
+
+@layer components {
+  /* Brand gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #4f46e5 0%, #7c3aed 45%, #c026d3 100%);
+  }
+
+  /* Frosted glass surface */
+  .glass {
+    @apply bg-surface/70 backdrop-blur-xl backdrop-saturate-150;
+  }
+
+  /* Subtle card hover lift used across listings */
+  .card-hover {
+    @apply transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lifted;
+  }
+
+  /* Section eyebrow label */
+  .eyebrow {
+    @apply inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-primary-600;
+  }
+
+  /* Loading shimmer */
+  .skeleton {
+    @apply relative overflow-hidden bg-muted;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--surface) / 0.6),
+      transparent
+    );
+    animation: shimmer 1.6s infinite;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar but keep scroll (thumbnail strips, chips rows) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Custom thin scrollbar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-border;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  /* Line clamp helpers */
+  .text-balance {
+    text-wrap: balance;
   }
 }

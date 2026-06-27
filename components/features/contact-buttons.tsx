@@ -2,7 +2,6 @@
 
 import { Phone, MessageCircle, Mail } from 'lucide-react'
 
-
 interface ContactButtonsProps {
     phone?: string | undefined
     whatsapp?: string | undefined
@@ -17,38 +16,40 @@ export function ContactButtons({
     providerName,
 }: ContactButtonsProps) {
     return (
-        <div className="flex flex-wrap gap-3">
+        <div className="space-y-2.5">
             {phone && (
                 <a
                     href={`tel:${phone}`}
-                    className="inline-flex h-12 flex-1 items-center justify-center rounded-lg bg-primary-600 px-6 text-lg font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 sm:flex-none"
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 text-sm font-semibold text-white shadow-soft transition-all hover:bg-primary-700 hover:shadow-glow active:scale-[0.98]"
                 >
-                    <Phone className="mr-2 h-5 w-5" />
-                    Llamar
+                    <Phone className="h-[18px] w-[18px]" />
+                    Llamar ahora
                 </a>
             )}
 
-            {whatsapp && (
-                <a
-                    href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-12 flex-1 items-center justify-center rounded-lg border-2 border-slate-300 bg-white px-6 text-lg font-medium transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:flex-none"
-                >
-                    <MessageCircle className="mr-2 h-5 w-5" />
-                    WhatsApp
-                </a>
-            )}
+            <div className="grid grid-cols-2 gap-2.5">
+                {whatsapp && (
+                    <a
+                        href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 text-sm font-semibold text-white shadow-soft transition-all hover:brightness-105 active:scale-[0.98]"
+                    >
+                        <MessageCircle className="h-[18px] w-[18px]" />
+                        WhatsApp
+                    </a>
+                )}
 
-            {email && (
-                <a
-                    href={`mailto:${email}?subject=Consulta sobre ${providerName}`}
-                    className="inline-flex h-12 flex-1 items-center justify-center rounded-lg border-2 border-slate-300 bg-white px-6 text-lg font-medium transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:flex-none"
-                >
-                    <Mail className="mr-2 h-5 w-5" />
-                    Email
-                </a>
-            )}
+                {email && (
+                    <a
+                        href={`mailto:${email}?subject=Consulta sobre ${providerName}`}
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground transition-all hover:bg-muted active:scale-[0.98]"
+                    >
+                        <Mail className="h-[18px] w-[18px]" />
+                        Email
+                    </a>
+                )}
+            </div>
         </div>
     )
 }

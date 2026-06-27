@@ -13,10 +13,17 @@ export type SearchFilters = z.infer<typeof searchFiltersSchema>
 
 // Review submission validation
 export const createReviewSchema = z.object({
-    providerId: z.string().uuid(),
-    rating: z.number().min(1).max(5),
-    comment: z.string().min(10).max(500),
-    photoUrl: z.string().url().optional(),
+    providerId: z.string().min(1),
+    rating: z.number().min(1, 'Selecciona una calificación').max(5),
+    comment: z
+        .string()
+        .min(10, 'El comentario debe tener al menos 10 caracteres')
+        .max(500, 'Máximo 500 caracteres'),
+    photoUrl: z
+        .string()
+        .url('Introduce una URL de imagen válida')
+        .optional()
+        .or(z.literal('')),
 })
 
 export type CreateReviewInput = z.infer<typeof createReviewSchema>

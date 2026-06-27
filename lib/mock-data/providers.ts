@@ -44,7 +44,10 @@ export const providers: Provider[] = [
         priceRange: '$$$',
         avgRating: 4.8,
         reviewCount: 89,
-        photos: ['https://images.unsplash.com/photo-1560066984-138dadb4c035'],
+        photos: [
+            'https://images.unsplash.com/photo-1560066984-138dadb4c035',
+            'https://images.unsplash.com/photo-1540555700478-4be289fbecef',
+        ],
         createdAt: '2024-02-10T14:30:00Z',
     },
     {
@@ -60,7 +63,10 @@ export const providers: Provider[] = [
         priceRange: '$$',
         avgRating: 4.3,
         reviewCount: 56,
-        photos: ['https://images.unsplash.com/photo-1486262715619-67b85e0b08d3'],
+        photos: [
+            'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3',
+            'https://images.unsplash.com/photo-1558981852-426c6c22a060',
+        ],
         createdAt: '2024-01-20T09:15:00Z',
     },
     {
@@ -76,7 +82,10 @@ export const providers: Provider[] = [
         priceRange: '$$',
         avgRating: 4.6,
         reviewCount: 143,
-        photos: ['https://images.unsplash.com/photo-1607472586893-edb57bdc0e39'],
+        photos: [
+            'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39',
+            'https://images.unsplash.com/photo-1581578731548-c64695cc6952',
+        ],
         createdAt: '2024-01-05T08:00:00Z',
     },
     {
@@ -93,7 +102,10 @@ export const providers: Provider[] = [
         priceRange: '$$$',
         avgRating: 4.7,
         reviewCount: 92,
-        photos: ['https://images.unsplash.com/photo-1621905251189-08b45d6a269e'],
+        photos: [
+            'https://images.unsplash.com/photo-1621905251189-08b45d6a269e',
+            'https://images.unsplash.com/photo-1541888946425-d81bb19240f5',
+        ],
         createdAt: '2024-02-01T11:20:00Z',
     },
     {
@@ -109,7 +121,10 @@ export const providers: Provider[] = [
         priceRange: '$',
         avgRating: 4.4,
         reviewCount: 67,
-        photos: ['https://images.unsplash.com/photo-1581578731548-c64695cc6952'],
+        photos: [
+            'https://images.unsplash.com/photo-1581578731548-c64695cc6952',
+            'https://images.unsplash.com/photo-1600518464441-9154a4dea21b',
+        ],
         createdAt: '2024-01-25T15:45:00Z',
     },
     {
@@ -141,7 +156,10 @@ export const providers: Provider[] = [
         priceRange: '$$$',
         avgRating: 4.9,
         reviewCount: 45,
-        photos: ['https://images.unsplash.com/photo-1565183928294-7d22f2d8655f'],
+        photos: [
+            'https://images.unsplash.com/photo-1567361808960-dec9cb578182',
+            'https://images.unsplash.com/photo-1541888946425-d81bb19240f5',
+        ],
         createdAt: '2024-01-18T13:15:00Z',
     },
     {
@@ -333,7 +351,10 @@ export const providers: Provider[] = [
         priceRange: '$$',
         avgRating: 4.4,
         reviewCount: 91,
-        photos: ['https://images.unsplash.com/photo-1565183928294-7d22f2d8655f'],
+        photos: [
+            'https://images.unsplash.com/photo-1622372738946-62e02505feb3',
+            'https://images.unsplash.com/photo-1530124566582-a618bc2615dc',
+        ],
         createdAt: '2024-01-16T16:15:00Z',
     },
 ]
