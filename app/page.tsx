@@ -14,6 +14,7 @@ import {
     LayoutGrid,
     Map as MapIcon,
     CheckCircle2,
+    SlidersHorizontal,
 } from 'lucide-react'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
@@ -54,6 +55,7 @@ export default function HomePage() {
     const [highlightedId, setHighlightedId] = useState<string | null>(null)
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [mounted, setMounted] = useState(false)
+    const [showFilters, setShowFilters] = useState(false)
 
     useEffect(() => setMounted(true), [])
 
@@ -209,9 +211,26 @@ export default function HomePage() {
 
             {/* ===== Results ===== */}
             <main id="resultados" className="container scroll-mt-20 py-10">
+                {/* Mobile filter toggle */}
+                <div className="mb-4 lg:hidden">
+                    <button
+                        onClick={() => setShowFilters((v) => !v)}
+                        aria-expanded={showFilters}
+                        className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary-300"
+                    >
+                        <SlidersHorizontal className="h-4 w-4" />
+                        {showFilters ? 'Ocultar filtros' : 'Filtros'}
+                        {activeCount > 0 && (
+                            <span className="ml-0.5 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs font-semibold text-white">
+                                {activeCount}
+                            </span>
+                        )}
+                    </button>
+                </div>
+
                 <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
                     {/* Sidebar */}
-                    <aside className="lg:sticky lg:top-20 lg:h-fit">
+                    <aside className={cn('lg:sticky lg:top-20 lg:h-fit lg:block', showFilters ? 'block' : 'hidden')}>
                         <FilterSidebar
                             category={category}
                             radius={radius}
